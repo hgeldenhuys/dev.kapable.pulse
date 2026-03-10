@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse — Share Ideas. Vote for the Best.</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #818cf8, #4f46e5, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .header p {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      margin-top: 0.35rem;
+    }
+
+    /* Form */
+    .submit-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .submit-form input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .submit-form input::placeholder {
+      color: #64748b;
+    }
+
+    .submit-form input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    .submit-form button {
+      padding: 0.75rem 1.5rem;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .submit-form button:hover {
+      background: #4338ca;
+    }
+
+    .submit-form button:active {
+      transform: scale(0.97);
+    }
+
+    .submit-form button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Ideas list */
+    .ideas-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .idea-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      transition: transform 0.2s, background 0.2s, opacity 0.4s;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .idea-card:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .idea-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .idea-content p {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      word-break: break-word;
+    }
+
+    .idea-time {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.35rem;
+    }
+
+    .vote-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      background: rgba(79, 70, 229, 0.1);
+      border: 1px solid rgba(79, 70, 229, 0.25);
+      border-radius: 10px;
+      padding: 0.5rem 0.65rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #818cf8;
+      flex-shrink: 0;
+      min-width: 48px;
+    }
+
+    .vote-btn:hover:not(.voted):not(:disabled) {
+      background: rgba(79, 70, 229, 0.2);
+      border-color: rgba(79, 70, 229, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .vote-btn:active:not(.voted):not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    .vote-btn.voted {
+      background: rgba(79, 70, 229, 0.25);
+      border-color: #4f46e5;
+      color: #a5b4fc;
+      cursor: default;
+    }
+
+    .vote-btn .arrow {
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .vote-btn .count {
+      font-size: 0.85rem;
+      font-weight: 700;
+      line-height: 1;
+      transition: transform 0.2s;
+    }
+
+    .vote-btn.bump .count {
+      animation: bumpCount 0.3s ease-out;
+    }
+
+    @keyframes bumpCount {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #64748b;
+    }
+
+    .empty-state .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      background: rgba(30, 30, 60, 0.95);
+      border: 1px solid rgba(79, 70, 229, 0.3);
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      color: #c7d2fe;
+      font-size: 0.875rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      animation: toastIn 0.3s ease-out;
+      backdrop-filter: blur(12px);
+    }
+
+    .toast.fade-out {
+      animation: toastOut 0.3s ease-in forwards;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(40px); }
+    }
+
+    /* Connection indicator */
+    .connection-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      margin-right: 0.4rem;
+      vertical-align: middle;
+      transition: background 0.3s;
+    }
+
+    .connection-dot.connected {
+      background: #22c55e;
+    }
+
+    .connection-status {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Loading spinner */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(79, 70, 229, 0.2);
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.25rem 0.75rem;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .submit-form {
+        flex-direction: column;
+      }
+
+      .submit-form button {
+        padding: 0.75rem;
+      }
+
+      .toast-container {
+        top: 0.75rem;
+        right: 0.75rem;
+        left: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Pulse</h1>
+      <p>Share ideas. Vote for the best.</p>
+    </div>
+
+    <div class="connection-status">
+      <span class="connection-dot" id="connectionDot"></span>
+      <span id="connectionLabel">Connecting...</span>
+    </div>
+
+    <form class="submit-form" id="submitForm">
+      <input
+        type="text"
+        id="ideaInput"
+        placeholder="Share an idea..."
+        autocomplete="off"
+        maxlength="500"
+        required
+      />
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>
+
+    <div class="ideas-list" id="ideasList">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    (function () {
+      // --- Visitor ID ---
+      let visitorId = localStorage.getItem("pulse_visitor_id");
+      if (!visitorId) {
+        visitorId = "v_" + crypto.randomUUID();
+        localStorage.setItem("pulse_visitor_id", visitorId);
+      }
+
+      // --- Voted ideas tracking ---
+      function getVotedSet() {
+        try {
+          const raw = localStorage.getItem("pulse_voted") || "[]";
+          return new Set(JSON.parse(raw));
+        } catch {
+          return new Set();
+        }
+      }
+
+      function markVoted(ideaId) {
+        const set = getVotedSet();
+        set.add(ideaId);
+        localStorage.setItem("pulse_voted", JSON.stringify([...set]));
+      }
+
+      function hasVoted(ideaId) {
+        return getVotedSet().has(ideaId);
+      }
+
+      // --- Toast ---
+      function showToast(message) {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(function () {
+          toast.classList.add("fade-out");
+          setTimeout(function () {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+          }, 300);
+        }, 3000);
+      }
+
+      // --- Time ago ---
+      function timeAgo(dateStr) {
+        const now = Date.now();
+        const then = new Date(dateStr).getTime();
+        const seconds = Math.floor((now - then) / 1000);
+        if (seconds < 10) return "just now";
+        if (seconds < 60) return seconds + "s ago";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + "m ago";
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + "h ago";
+        const days = Math.floor(hours / 24);
+        return days + "d ago";
+      }
+
+      // --- Render ---
+      let currentIdeas = [];
+      let previousIdeaCount = 0;
+
+      function renderIdeas(ideas) {
+        const list = document.getElementById("ideasList");
+
+        if (!ideas || ideas.length === 0) {
+          list.innerHTML =
+            '<div class="empty-state">' +
+            '<div class="icon">&#x1F4A1;</div>' +
+            '<p>No ideas yet. Be the first!</p>' +
+            '</div>';
+          previousIdeaCount = 0;
+          return;
+        }
+
+        // Detect new ideas for toast (only after initial load)
+        if (previousIdeaCount > 0 && ideas.length > previousIdeaCount) {
+          const newCount = ideas.length - previousIdeaCount;
+          showToast(newCount === 1 ? "New idea submitted!" : newCount + " new ideas submitted!");
+        }
+        previousIdeaCount = ideas.length;
+
+        let html = "";
+        for (let i = 0; i < ideas.length; i++) {
+          const idea = ideas[i];
+          const voted = hasVoted(idea.id);
+          const votedClass = voted ? " voted" : "";
+          const disabledAttr = voted ? ' disabled="true"' : "";
+
+          html +=
+            '<div class="idea-card" data-id="' + idea.id + '">' +
+            '  <div class="idea-content">' +
+            '    <p>' + escapeHtml(idea.content) + '</p>' +
+            '    <div class="idea-time">' + timeAgo(idea.created_at) + '</div>' +
+            '  </div>' +
+            '  <button class="vote-btn' + votedClass + '" data-idea-id="' + idea.id + '"' + disabledAttr + '>' +
+            '    <span class="arrow">&#9650;</span>' +
+            '    <span class="count">' + (idea.vote_count || 0) + '</span>' +
+            '  </button>' +
+            '</div>';
+        }
+
+        list.innerHTML = html;
+
+        // Attach click handlers via for-loop
+        const buttons = list.querySelectorAll(".vote-btn:not(.voted)");
+        for (let i = 0; i < buttons.length; i++) {
+          buttons[i].addEventListener("click", handleUpvote);
+        }
+
+        currentIdeas = ideas;
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // --- API calls ---
+      async function fetchIdeas() {
+        try {
+          const res = await fetch("/api/ideas");
+          if (!res.ok) {
+            console.error("Failed to fetch ideas:", res.status);
+            showToast("Failed to load ideas");
+            return;
+          }
+          const data = await res.json();
+          renderIdeas(data);
+        } catch (err) {
+          console.error("Fetch ideas error:", err);
+          showToast("Connection error");
+        }
+      }
+
+      async function submitIdea(content) {
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.textContent = "Submitting...";
+        try {
+          const res = await fetch("/api/ideas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: content }),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            console.error("Submit failed:", res.status, text);
+            showToast("Failed to submit idea");
+            return;
+          }
+          document.getElementById("ideaInput").value = "";
+          await fetchIdeas();
+        } catch (err) {
+          console.error("Submit error:", err);
+          showToast("Connection error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Submit";
+        }
+      }
+
+      async function handleUpvote(e) {
+        const btn = e.currentTarget;
+        const ideaId = btn.getAttribute("data-idea-id");
+        if (!ideaId || hasVoted(ideaId)) return;
+
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/upvote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ideaId: ideaId, visitorId: visitorId }),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            console.error("Upvote failed:", res.status, text);
+            showToast("Failed to upvote");
+            return;
+          }
+          const result = await res.json();
+          if (!result.alreadyVoted) {
+            markVoted(ideaId);
+            btn.classList.add("voted", "bump");
+            const countEl = btn.querySelector(".count");
+            if (countEl) {
+              countEl.textContent = parseInt(countEl.textContent) + 1;
+            }
+          } else {
+            markVoted(ideaId);
+            btn.classList.add("voted");
+          }
+        } catch (err) {
+          console.error("Upvote error:", err);
+          showToast("Connection error");
+          btn.disabled = false;
+        }
+      }
+
+      // --- Form ---
+      document.getElementById("submitForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const input = document.getElementById("ideaInput");
+        const content = input.value.trim();
+        if (content.length === 0) return;
+        submitIdea(content);
+      });
+
+      // --- SSE ---
+      let sseRetryTimeout = null;
+      let sseInstance = null;
+
+      function connectSSE() {
+        const dot = document.getElementById("connectionDot");
+        const label = document.getElementById("connectionLabel");
+
+        if (sseInstance) {
+          sseInstance.close();
+        }
+
+        sseInstance = new EventSource("/api/sse");
+
+        sseInstance.onopen = function () {
+          dot.classList.add("connected");
+          label.textContent = "Live";
+        };
+
+        sseInstance.onmessage = function (event) {
+          // Any data event means something changed, refresh the list
+          fetchIdeas();
+        };
+
+        sseInstance.onerror = function () {
+          dot.classList.remove("connected");
+          label.textContent = "Reconnecting...";
+          sseInstance.close();
+          // Retry after 3 seconds
+          if (sseRetryTimeout) clearTimeout(sseRetryTimeout);
+          sseRetryTimeout = setTimeout(connectSSE, 3000);
+        };
+      }
+
+      // --- Init ---
+      fetchIdeas();
+      connectSSE();
+
+      // Refresh time-ago every minute
+      setInterval(function () {
+        const timeEls = document.querySelectorAll(".idea-time");
+        // Re-render to update times
+        if (currentIdeas.length > 0) {
+          renderIdeas(currentIdeas);
+        }
+      }, 60000);
+    })();
+  </script>
+</body>
+</html>
